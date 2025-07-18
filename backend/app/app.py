@@ -67,7 +67,19 @@ def create_app():
                 print(f"Error from matching API: {match_response.status_code} {match_response.text}")
                 return jsonify({"error": "Matching failed", "details": match_response.text}), match_response.status_code
 
-            return jsonify(match_response.json())
+            matching_results = match_response.json()
+            
+            extracted_data_map = {item.get('Request Item') or item.get('po_item'): item for item in extracted_data}
+
+            augmented_results = {}
+            if 'results' in matching_results:
+                for po_item, matches in matching_results['results'].items():
+                    augmented_results[po_item] = {
+                        "matches": matches,
+                        "details": extracted_data_map.get(po_item)
+                    }
+
+            return jsonify({"results": augmented_results})
 
     @app.route('/confirm_matches', methods=['POST'])
     def confirm_matches():

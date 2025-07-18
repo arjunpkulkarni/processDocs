@@ -12,13 +12,14 @@ html, body, #root {
   background: #f9fafb;
 }
 
+/* Ensure the app container takes full height of the viewport */
 .app-container {
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
-  padding: 2rem;
+  background-color: #f8f9fa; /* Example background color */
 }
 
 .card {
@@ -64,6 +65,20 @@ h1, h2 {
 .upload-section button:hover {
   background: #4338ca;
   transform: scale(1.05);
+}
+
+.upload-section button:disabled {
+  background: #a5b4fc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.upload-section button.reset-button {
+  background: #ef4444;
+}
+
+.upload-section button.reset-button:hover {
+  background: #dc2626;
 }
 
 .results-section {
@@ -116,4 +131,119 @@ h1, h2 {
 .confirm-button button:hover {
   background: #059669;
   transform: scale(1.05);
+}
+
+.confirm-button button:disabled {
+  background: #6ee7b7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.item-details {
+  margin-top: 1rem;
+  color: #555;
+}
+
+/* Ensure the table takes full width and is responsive */
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* Remove any fixed height constraints */
+.results-table-container {
+  overflow: visible;
+}
+
+/* Add some padding and border for better aesthetics */
+.results-table th, .results-table td {
+  padding: 8px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+/* Make sure the table is responsive */
+@media (max-width: 768px) {
+  .results-table th, .results-table td {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+.results-table td:first-child {
+  color: black;
+}
+
+.results-table th {
+  background-color: #f3f4f6;
+  font-weight: 600;
+  color: #374151;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.results-table tbody tr:nth-child(odd) {
+  background-color: #f9fafb;
+}
+
+.results-table .item-details p {
+  margin: 0 0 0.25rem;
+  font-size: 0.9rem;
+}
+
+.results-table .item-details strong {
+  color: #4b5563;
+}
+
+.results-table-container {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 60vh; /* Adjust this as needed */
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  position: relative;
+}
+
+/* Optional scrollbar styling (for WebKit browsers) */
+.results-table-container::-webkit-scrollbar {
+  width: 8px;
+}
+.results-table-container::-webkit-scrollbar-thumb {
+  background-color: #d1d5db;
+  border-radius: 4px;
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 20;
+  border-radius: 0.5rem;
+}
+
+.spinner {
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border-left-color: #4f46e5;
+  animation: spin 1s ease infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }

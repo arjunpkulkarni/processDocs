@@ -1,5 +1,7 @@
 import { useState, useRef } from 'react';
-import axios from 'axios';
+import api from './api';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import './App.css';
 
 interface CatalogItem {
@@ -50,6 +52,37 @@ function App() {
     });
   };
 
+  const downloadJson = (data: any, filename: string) => {
+    const jsonString = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadPdf = (data: any[], filename: string) => {
+    const doc = new jsPDF();
+    const allKeys = data.reduce<string[]>((keys, obj) => {
+      Object.keys(obj).forEach(key => {
+        if (!keys.includes(key)) {
+          keys.push(key);
+        }
+      });
+      return keys;
+    }, []);
+
+    autoTable(doc, {
+      head: [allKeys],
+      body: data.map(row => allKeys.map(key => row[key] !== undefined && row[key] !== null ? String(row[key]) : '')),
+    });
+    doc.save(filename);
+  };
+
   const handleConfirmMatches = async () => {
     const matchesToConfirm = Object.keys(selectedMatches).map(po_item => {
       const catalog_item = selectedMatches[po_item];
@@ -63,13 +96,24 @@ function App() {
     setIsConfirming(true);
     try {
       console.log("confirming matches", { matches: matchesToConfirm });
-      await axios.post('http://127.0.0.1:5000/confirm_matches', { matches: matchesToConfirm });
+      await api.post('/confirm_matches', { matches: matchesToConfirm });
       alert('Matches confirmed successfully!');
       setResults([]);
       setSelectedMatches({});
     } catch (error) {
       console.error('Confirmation error:', error);
-      alert('Failed to save purchase order.');
+      const pdfData = Object.keys(selectedMatches).map(po_item => {
+        const catalog_item = selectedMatches[po_item];
+        const result = results.find(r => r.po_item === po_item);
+        const details = result ? result.details : {};
+        return {
+          "PO Item": po_item,
+          "Catalog ID": catalog_item.id,
+          "Catalog Description": catalog_item.description,
+          ...details
+        };
+      });
+      downloadPdf(pdfData, 'matches.pdf');
     } finally {
       setIsConfirming(false);
     }
@@ -84,7 +128,7 @@ function App() {
 
       try {
         console.log("uploading file", file);
-        const response = await axios.post('http://127.0.0.1:5000/upload', formData, {
+        const response = await api.post('/upload', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },

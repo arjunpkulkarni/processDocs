@@ -75,4 +75,5 @@ This is a full-stack web application for processing purchase orders. It allows u
 
 ## Demo Video
 
-[Link to demo video] 
+
+https://www.loom.com/share/849fe122e6ea4a22aeb4793a1bfd1590

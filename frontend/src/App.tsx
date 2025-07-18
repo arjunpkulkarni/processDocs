@@ -41,6 +41,7 @@ type View = 'upload' | 'orders';
 function App() {
   const [file, setFile] = useState<File | null>(null);
   const [results, setResults] = useState<MatchResult[]>([]);
+  const [originalResults, setOriginalResults] = useState<MatchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const [selectedMatches, setSelectedMatches] = useState<SelectedMatches>({});
@@ -70,6 +71,46 @@ function App() {
       setResults([]);
       setSelectedMatches({});
     }
+  };
+
+  const handlePoItemChange = (index: number, new_po_item: string) => {
+    const original_po_item = results[index].po_item;
+
+    if (original_po_item !== new_po_item) {
+      setResults(prevResults =>
+        prevResults.map((result, i) =>
+          i === index ? { ...result, po_item: new_po_item } : result
+        )
+      );
+
+      setSelectedMatches(prev => {
+        if (Object.prototype.hasOwnProperty.call(prev, original_po_item)) {
+          const newSelected = { ...prev };
+          const match = newSelected[original_po_item];
+          delete newSelected[original_po_item];
+          newSelected[new_po_item] = match;
+          return newSelected;
+        }
+        return prev;
+      });
+    }
+  };
+
+  const handleDetailChange = (index: number, detailKey: string, newValue: string) => {
+    setResults(prevResults =>
+      prevResults.map((result, i) => {
+        if (i === index) {
+          return {
+            ...result,
+            details: {
+              ...result.details,
+              [detailKey]: newValue,
+            },
+          };
+        }
+        return result;
+      })
+    );
   };
 
   const handleSelectionChange = (po_item: string, catalog_item: CatalogItem) => {
@@ -111,12 +152,13 @@ function App() {
   };
 
   const handleConfirmMatches = async () => {
-    const matchesToConfirm = Object.keys(selectedMatches).map(po_item => {
-      const catalog_item = selectedMatches[po_item];
+    const matchesToConfirm = results.map(result => {
+      const catalog_item = selectedMatches[result.po_item];
       return {
-        po_item,
+        po_item: result.po_item,
         catalog_item_id: catalog_item.id,
         catalog_item_description: catalog_item.description,
+        details: result.details,
       };
     });
 
@@ -129,15 +171,13 @@ function App() {
       setSelectedMatches({});
     } catch (error) {
       console.error('Confirmation error:', error);
-      const pdfData = Object.keys(selectedMatches).map(po_item => {
-        const catalog_item = selectedMatches[po_item];
-        const result = results.find(r => r.po_item === po_item);
-        const details = result ? result.details : {};
+      const pdfData = results.map(result => {
+        const catalog_item = selectedMatches[result.po_item];
         return {
-          "PO Item": po_item,
+          "PO Item": result.po_item,
           "Catalog ID": catalog_item.id,
           "Catalog Description": catalog_item.description,
-          ...details
+          ...result.details
         };
       });
       downloadPdf(pdfData, 'matches.pdf');
@@ -179,6 +219,7 @@ function App() {
         });
 
         setResults(formattedResults);
+        setOriginalResults(formattedResults);
 
         const initialSelectedMatches: SelectedMatches = {};
         formattedResults.forEach((result: MatchResult) => {
@@ -202,6 +243,7 @@ function App() {
     if (window.confirm('Are you sure you want to reset? All current data will be lost.')) {
       setFile(null);
       setResults([]);
+      setOriginalResults([]);
       setSelectedMatches({});
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
@@ -245,20 +287,38 @@ function App() {
                 <tbody>
                   {results.map((result, index) => (
                     <tr key={index}>
-                      <td>{result.po_item}</td>
+                      <td>
+                        <input
+                          type="text"
+                          value={result.po_item}
+                          onChange={(e) => handlePoItemChange(index, e.target.value)}
+                          className="w-full bg-transparent"
+                          style={{ color: 'black' }}
+                        />
+                      </td>
                       <td>
                         {result.details && (
                           <div className="item-details">
                             {Object.entries(result.details).map(([key, value]) => (
-                              value !== null && value !== undefined && (
-                                <p key={key}><strong>{key}:</strong> {String(value)}</p>
-                              )
+                              <div key={key} className="flex items-center">
+                                <strong className="mr-2">{key}:</strong>
+                                <input
+                                  type="text"
+                                  value={String(value)}
+                                  onChange={(e) => handleDetailChange(index, key, e.target.value)}
+                                  className="w-full bg-transparent"
+                                  style={{ color: 'black' }}
+                                />
+                              </div>
                             ))}
                           </div>
                         )}
                       </td>
                       <td>
-                        <select onChange={(e) => handleSelectionChange(result.po_item, JSON.parse(e.target.value))}>
+                        <select
+                          onChange={(e) => handleSelectionChange(result.po_item, JSON.parse(e.target.value))}
+                          value={JSON.stringify(selectedMatches[result.po_item])}
+                        >
                           {result.matches.map((match, i) => (
                             <option key={i} value={JSON.stringify(match.catalog_item)}>
                               {match.catalog_item.description} (Score: {match.score.toFixed(2)})

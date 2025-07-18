@@ -62,13 +62,14 @@ function App() {
 
     setIsConfirming(true);
     try {
+      console.log("confirming matches", { matches: matchesToConfirm });
       await axios.post('http://127.0.0.1:5000/confirm_matches', { matches: matchesToConfirm });
       alert('Matches confirmed successfully!');
       setResults([]);
       setSelectedMatches({});
     } catch (error) {
       console.error('Confirmation error:', error);
-      alert('Failed to confirm matches.');
+      alert('Failed to save purchase order.');
     } finally {
       setIsConfirming(false);
     }
@@ -82,6 +83,7 @@ function App() {
       setResults([]);
 
       try {
+        console.log("uploading file", file);
         const response = await axios.post('http://127.0.0.1:5000/upload', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',

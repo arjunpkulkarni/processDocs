@@ -88,12 +88,33 @@ def create_app():
         cur = conn.cursor()
         for match in matches:
             cur.execute(
-                "INSERT INTO matches (po_item, catalog_item_id, catalog_item_description) VALUES (%s, %s, %s)",
+                "INSERT INTO orders (po_item, catalog_item_id, catalog_item_description) VALUES (%s, %s, %s)",
                 (match['po_item'], match['catalog_item_id'], match['catalog_item_description'])
             )
         conn.commit()
         cur.close()
         conn.close()
         return jsonify({"message": "Matches confirmed successfully"}), 200
+
+    @app.route('/orders', methods=['GET'])
+    def get_orders():
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT id, po_item, catalog_item_id, catalog_item_description, created_at FROM orders ORDER BY created_at DESC")
+        orders = cur.fetchall()
+        cur.close()
+        conn.close()
+        
+        orders_list = []
+        for order in orders:
+            orders_list.append({
+                "id": order[0],
+                "po_item": order[1],
+                "catalog_item_id": order[2],
+                "catalog_item_description": order[3],
+                "created_at": order[4]
+            })
+            
+        return jsonify(orders_list)
 
     return app 

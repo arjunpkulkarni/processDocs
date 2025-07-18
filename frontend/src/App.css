@@ -113,8 +113,8 @@ h1, h2 {
 }
 
 .confirm-button {
-  text-align: center;
-  margin-top: 2rem;
+  margin-top: 20px;
+  text-align: right;
 }
 
 .confirm-button button {
@@ -246,4 +246,30 @@ h1, h2 {
   100% {
     transform: rotate(360deg);
   }
+}
+
+.top-nav {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.top-nav button {
+  margin: 0 10px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  background-color: #f0f0f0;
+}
+
+.top-nav button:disabled {
+  background-color: #e0e0e0;
+  cursor: not-allowed;
+  font-weight: bold;
+  border-width: 2px;
+}
+
+.orders-table-container {
+  margin-top: 20px;
 }

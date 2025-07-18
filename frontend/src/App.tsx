@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import api from './api';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -28,14 +28,41 @@ type Details = {
   [key: string]: string;
 };
 
+type Order = {
+  id: number;
+  po_item: string;
+  catalog_item_id: string;
+  catalog_item_description: string;
+  created_at: string;
+};
+
+type View = 'upload' | 'orders';
+
 function App() {
   const [file, setFile] = useState<File | null>(null);
   const [results, setResults] = useState<MatchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const [selectedMatches, setSelectedMatches] = useState<SelectedMatches>({});
+  const [view, setView] = useState<View>('upload');
+  const [orders, setOrders] = useState<Order[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
+
+  const fetchOrders = async () => {
+    try {
+      const response = await api.get('/orders');
+      setOrders(response.data);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (view === 'orders') {
+      fetchOrders();
+    }
+  }, [view]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -182,8 +209,8 @@ function App() {
     }
   };
 
-  return (
-    <div className="app-container">
+  const renderUploadView = () => (
+    <>
       <div className="card">
         <h1>Process Purchase Order</h1>
         <div className="upload-section">
@@ -252,6 +279,74 @@ function App() {
           </div>
         </div>
       )}
+    </>
+  );
+
+  const renderOrdersView = () => (
+    <div className="card">
+      <h1>Confirmed Orders</h1>
+      <div className="orders-table-container">
+        <table className="results-table">
+          <thead>
+            <tr>
+              <th>PO Item</th>
+              <th>Catalog Item ID</th>
+              <th>Catalog Item Description</th>
+              <th>Confirmed At</th>
+            </tr>
+          </thead>
+          <tbody>
+            {orders.map((order) => (
+              <tr key={order.id}>
+                <td>{order.po_item}</td>
+                <td>{order.catalog_item_id}</td>
+                <td>{order.catalog_item_description}</td>
+                <td>{new Date(order.created_at).toLocaleString()}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="app-container">
+      <nav
+        className="top-nav"
+        style={{ backgroundColor: 'black', padding: '1rem', borderRadius: '1rem', display: 'flex', gap: '1rem' }}
+      >
+        <button
+          onClick={() => setView('upload')}
+          disabled={view === 'upload'}
+          style={{
+            backgroundColor: 'transparent',
+            color: 'white',
+            border: '1px solid white',
+            padding: '0.5rem 1rem',
+            cursor: view === 'upload' ? 'not-allowed' : 'pointer',
+            opacity: view === 'upload' ? 0.5 : 1,
+          }}
+        >
+          Process PO
+        </button>
+        <button
+          onClick={() => setView('orders')}
+          disabled={view === 'orders'}
+          style={{
+            backgroundColor: 'transparent',
+            color: 'white',
+            border: '1px solid white',
+            padding: '0.5rem 1rem',
+            cursor: view === 'orders' ? 'not-allowed' : 'pointer',
+            opacity: view === 'orders' ? 0.5 : 1,
+          }}
+        >
+          View Orders
+        </button>
+      </nav>
+
+      {view === 'upload' ? renderUploadView() : renderOrdersView()}
     </div>
   );
 }

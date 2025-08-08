@@ -1,4 +1,4 @@
-# Endeavor Document Processing App
+# Purchase Order Document Processing App
 
 This is a full-stack web application for processing purchase orders. It allows users to upload a purchase order, extracts line items, matches them to a product catalog, and allows a user to confirm the matches, which are then saved to a database.
 
